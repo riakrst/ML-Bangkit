@@ -4,7 +4,8 @@ const webcam = new Webcam(document.getElementById('wc'));
 const dataset = new RPSDataset();
 var rockSamples=0, paperSamples=0, scissorsSamples=0, spockSamples=0, lizardSamples=0;
 let isPredicting = false;
-tf.setBackend('webgl');
+tf.setBackend("cpu");
+
 
 async function loadMobilenet() {
   const mobilenet = await tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_1.0_224/model.json');
@@ -26,9 +27,18 @@ async function train() {
   // using ReLu activation functions where applicable.
   model = tf.sequential({
     layers: [
-        tf.layers.flatten({inputShape: mobilenet.outputs[0].shape.slice(1)}),
-        tf.layers.dense({units: 100, activation: 'relu'}),
-        tf.layers.dense({units: 5, activation: 'softmax'}),
+        // Versi 1
+        // tf.layers.flatten({inputShape: mobilenet.outputs[0].shape.slice(1)}),
+        // tf.layers.dense({units: 100, activation: 'relu'}),
+        // tf.layers.dense({units: 5, activation: 'softmax'}),
+
+        // Versi 2
+        tf.layers.conv2d({inputShape: mobilenet.outputs[0].shape.slice(1), kernelSize: 1, filters: 128, activation: 'relu', kernel_initializer: 'he_uniform'}),
+        tf.layers.conv2d({kernelSize: 3, filters: 32, activation: 'relu', kernel_initializer: 'he_uniform'}),
+        tf.layers.maxPooling2d({poolSize: [2, 2]}),
+        tf.layers.flatten(),
+        // tf.layers.dense({units: 32, activation: "relu"}),
+        tf.layers.dense({units: 5, activation: "softmax"})
 
     ]
   });
